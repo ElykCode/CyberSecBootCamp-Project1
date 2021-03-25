@@ -87,4 +87,4 @@ This document contains the following details:
     SSH into the control node and follow the steps below:
     - Copy the \*_playbook.yml files to the Ansible Docker image.
     - Update the Ansible hosts (/etc/ansible/hosts) file to include the IP address of your ELK server and the IP addresses of the web servers.
-    - Run the playbook, and navigate to <ELK server IP>:5601 to check that the installation worked as expected.
+    - Run the playbook, and navigate to (ELK server IP):5601 to check that the installation worked as expected.
