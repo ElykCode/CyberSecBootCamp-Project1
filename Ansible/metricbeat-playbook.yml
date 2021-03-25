@@ -1,0 +1,44 @@
+---
+
+  - name: Metricbeat Playbook
+    hosts: webservers
+    become: true
+    tasks:
+
+      # check package_facts to vefify against later
+      - name: Get Package Facts
+        package_facts:
+          manager: auto
+
+      # check the ansible_facts dictionary and install Metricbeat if it is not already
+      - name: Download Metricbeat
+        when: "'metricbeat' not in ansible_facts.packages"
+        command: curl -L -O https://artifacts.elastic.co/downloads/beats/metricbeat/metricbeat-7.6.1-amd64.deb
+
+      - name: Install downloaded Metricbeat package
+        when: "'metricbeat' not in ansible_facts.packages"
+        command: dpkg -i metricbeat-7.6.1-amd64.deb
+
+      # copy the Metricbeat config to each machin
+      - name:  Copy Metricbeat config
+        copy:
+          dest: /etc/metricbeat/metricbeat.yml
+          src: /etc/ansible/roles/files/metricbeat-config.yml
+          force: yes
+
+      # use the command module to run the metricbeat commands
+      - name: Enable system in Metricbeat Modules
+        command: metricbeat modules enable docker
+
+      - name: Run Metricbeat setup
+        command: metricbeat setup
+
+        #- name: Run command metricbeat -e
+        #command: metricbeat -e
+
+        # use systemd to start and enable the Metricbeat service
+      - name: Start the Metricbeat service
+        systemd:
+          name: metricbeat
+          enabled: yes
+          state: started

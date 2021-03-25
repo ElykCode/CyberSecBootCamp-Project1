@@ -1,0 +1,44 @@
+---
+
+  - name: Filebeat Playbook
+    hosts: webservers
+    become: true
+    tasks:
+
+      # check if Filebeat is installed and set a register if so
+      - name: Check if Filebeat is installed already
+        package_facts:
+          manager: auto
+        #command: dpkg -l filebeat-7.6.1-amd64.deb
+        #debug:
+        #  msg: "Filebeat is installed already!"
+        #register: filebeat_is_installed
+
+      # check the ansible_facts dictionary and install Filebeat if it is not already
+      - name: Download Filebeat
+        when: "'filebeat' not in ansible_facts.packages"
+        command: curl -L -O https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-7.6.1-amd64.deb
+
+      - name: Install downloaded Filebeat package
+        when: "'filebeat' not in ansible_facts.packages"
+        command: dpkg -i filebeat-7.6.1-amd64.deb
+
+      # copy the Filebeat config to each machine
+      - name:  Copy Filebeat config
+        copy:
+          dest: /etc/filebeat/filebeat.yml
+          src: /etc/ansible/roles/files/filebeat-config.yml
+          force: yes
+
+      # use the command module to run the filebeat commands
+      - name: Enable system in Filebeat Modules
+        command: filebeat modules enable system
+
+      - name: Run filebeat setup
+        command: filebeat setup
+
+      - name: Start the Filebeat service
+        systemd:
+          name: filebeat
+          enabled: yes
+          state: started
